@@ -1,12 +1,10 @@
 import time
 import json
 import threading
-from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 
 # 讀取 JSON 配置文件
 with open('config.json', 'r', encoding='utf-8') as config_file:
@@ -32,17 +30,28 @@ def format_time(time_str):
 
 
 def book_facility(booking):
-    Time = booking['選取時段']
-    Account = booking['帳號']
-    Password = booking['密碼']
-    Venue = booking['體育館']
-    Venue_Type = booking['設施']
-    Payment = booking['付款方式']
-    nameOnCard = booking['持卡人姓名']
-    number = booking['卡號']
-    expiryMonth = booking['到期月']
-    expiryYear = booking['到期年']
-    securityCode = booking['安全碼']
+    for booking in config['預訂'][1:]:
+        if "付款方式" in booking and booking["付款方式"] == "PPS":
+            Time = booking['選取時段']
+            Account = booking['帳號']
+            Password = booking['密碼']
+            Venue = booking['體育館']
+            Venue_Type = booking['設施']
+            Payment = booking['付款方式']
+            number = booking['卡號']
+            securityCode = booking['安全碼']
+        else:
+            Time = booking['選取時段']
+            Account = booking['帳號']
+            Password = booking['密碼']
+            Venue = booking['體育館']
+            Venue_Type = booking['設施']
+            Payment = booking['付款方式']
+            nameOnCard = booking['持卡人姓名']
+            number = booking['卡號']
+            expiryMonth = booking['到期月']
+            expiryYear = booking['到期年']
+            securityCode = booking['安全碼']
 
     # 為每個 WebDriver 創建一個新的用戶配置
     options = webdriver.FirefoxOptions()
@@ -53,15 +62,11 @@ def book_facility(booking):
     wait = WebDriverWait(driver, 10)
 
     def Login():
-        # 等待并找到帐号输入框（第一个 el-input__inner）
         account_element = wait.until(EC.visibility_of_element_located((By.XPATH, '(//input[@class="el-input__inner"])[1]')))
         account_element.send_keys(Account)
-
-        # 等待并找到密码输入框（第二个 el-input__inner）
         password_element = wait.until(EC.visibility_of_element_located((By.XPATH, '(//input[@class="el-input__inner"])[2]')))
         password_element.send_keys(Password)
 
-        # 使用按钮的文本来定位
         wait.until(EC.element_to_be_clickable((By.XPATH, "//div[contains(text(), '登錄')]"))).click()
 
 
@@ -116,35 +121,31 @@ def book_facility(booking):
         driver.switch_to.frame(name_iframe_element)
         nameOnCard_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="nameOnCard"]')))
         nameOnCard_element.send_keys(nameOnCard)
-        driver.switch_to.default_content()  # Switch back to the main content
+        driver.switch_to.default_content()
 
-        # Switch to the iframe for the card number
         number_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="#card-number"]')))
         driver.switch_to.frame(number_iframe_element)
         number_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="number"]')))
         number_element.send_keys(number)
-        driver.switch_to.default_content()  # Switch back to the main content
+        driver.switch_to.default_content()
 
-        # Switch to the iframe for the expiry month
         expiryMonth_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="#expiry-month"]')))
         driver.switch_to.frame(expiryMonth_iframe_element)
         expiryMonth_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="expiryMonth"]')))
         expiryMonth_element.send_keys(expiryMonth)
-        driver.switch_to.default_content()  # Switch back to the main content
+        driver.switch_to.default_content()
 
-        # Switch to the iframe for the expiry year
         expiryYear_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="#expiry-year"]')))
         driver.switch_to.frame(expiryYear_iframe_element)
         expiryYear_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="expiryYear"]')))
         expiryYear_element.send_keys(expiryYear)
-        driver.switch_to.default_content()  # Switch back to the main content
+        driver.switch_to.default_content()
 
-        # Switch to the iframe for the security code
         securityCode_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="#security-code"]')))
         driver.switch_to.frame(securityCode_iframe_element)
         securityCode_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="securityCode"]')))
         securityCode_element.send_keys(securityCode)
-        driver.switch_to.default_content()  # Switch back to the main content
+        driver.switch_to.default_content()
 
     def unionpay():
         wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="pay-button"]'))).click()
@@ -162,7 +163,6 @@ def book_facility(booking):
     Search_Facility()
     select_time()
 
-    # 選擇設施並進行預定
     list_XPATH = '/html/body/div/div[2]/div[4]/div[2]/div/div/div[2]/div[2]/div/div[2]/div[3]'
     divs = wait.until(EC.visibility_of_all_elements_located((By.XPATH, f'{list_XPATH}/div')))
 
@@ -172,28 +172,22 @@ def book_facility(booking):
             available_times = []
             time_element = wait.until(EC.visibility_of_element_located((By.XPATH, f'{list_XPATH}/div[{index}]/div[2]/div/div[2]/div')))
 
-            # 拆分字符串並去除空字符串
             time_data = [line for line in time_element.text.split('\n') if line.strip()]
 
-            # 將時間和數量組合成新的列表，並去除重複項
             for i in range(0, len(time_data), 2):
                 new_entry = [time_data[i], f"{time_data[i + 1]}張"]
-                
-                # 檢查新的條目是否已存在於 available_times 中
+
                 if new_entry not in available_times:
                     available_times.append(new_entry)
 
             wait.until(EC.invisibility_of_element_located((By.CLASS_NAME, "el-loading-mask")))
             time.sleep(1)
-            # 點擊3次，每次可能會有新數據
             for _ in range(3):
                 wait.until(EC.visibility_of_element_located((By.XPATH, f'{list_XPATH}/div[{index}]/div[2]/div/div[3]/div[2]/div/img'))).click()
                 
-                # 再次獲取新的時間數據
                 time_element = wait.until(EC.visibility_of_element_located((By.XPATH, f'{list_XPATH}/div[{index}]/div[2]/div/div[2]/div')))
                 time_data = [line for line in time_element.text.split('\n') if line.strip()]
-                
-                # 將新的時間和數量添加到列表，並避免重複
+
                 for i in range(0, len(time_data), 2):
                     new_entry = [time_data[i], f"{time_data[i + 1]}張"]
                     if new_entry not in available_times:
@@ -201,7 +195,6 @@ def book_facility(booking):
             
             for sub_index, (time_str, count) in enumerate(available_times):
                 if time_str == format_time(Time):
-                # 根據 index 構建正確的 XPath
                     if count == '0張':
                         print(f'預定失敗原因：非常抱歉，但【{Venue}】的【{Venue_Type}】在{Time}點沒有票了')
                         break
@@ -210,7 +203,6 @@ def book_facility(booking):
                         if sub_index + 1 < 5:
                             for _ in range(3):
                                 wait.until(EC.visibility_of_element_located((By.XPATH, f'{list_XPATH}/div[{index}]/div[2]/div/div[1]/div[2]/div/img'))).click()
-                                #f'{list_XPATH}/div[7]/div[2]/div/div[1]/div[2]/div/img
                         Time_Selector = wait.until(EC.visibility_of_element_located((By.XPATH, f'{list_XPATH}/div[{index}]/div[2]/div/div[2]/div/div[{time_xpath}]/div')))
                         driver.execute_script("arguments[0].click();", Time_Selector)
 
