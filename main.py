@@ -296,17 +296,6 @@ def book_facility(booking):
 # 創建線程以同時預定
 threads = []
 for booking in config['預訂'][1:]:
-    thread = threading.Thread(target=book_facility, args=(booking,))
-    threads.append(thread)
-    thread.start()
-
-# 等待所有線程完成
-for thread in threads:
-    thread.join()
-
-
-# threads = []
-# for booking in config['預訂'][1:]:
 #     # 獲取預訂的運行時間
 #     booking_run_time = config['預訂'][0]['運行時間']
 #     booking_run_time_dt = datetime.strptime(booking_run_time, "%H%M").time()
@@ -320,13 +309,13 @@ for thread in threads:
 #     if delay_seconds > 0:
 #         time.sleep(delay_seconds)
 
-#     thread = threading.Thread(target=book_facility, args=(booking,))
-#     threads.append(thread)
-#     thread.start()
+    thread = threading.Thread(target=book_facility, args=(booking,))
+    threads.append(thread)
+    thread.start()
 
-# # 等待所有線程完成
-# for thread in threads:
-#     thread.join()
+# 等待所有線程完成
+for thread in threads:
+    thread.join()
 
 # 22222222222222222222222222222222222222222221b31@@@@@@13b22222222222222222222222222222222222222222222
 # 22222222222222222222222222222222222222222b2#.          .%1a22222222222222222222222222222222222222222
