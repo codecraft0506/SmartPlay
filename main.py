@@ -266,19 +266,21 @@ def book_facility(booking):
                             wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/div/div[2]/div[1]/div/div/div/div[4]/img"))).click()
                         time.sleep(10)
                         
-                        if Payment == 'FPS':
+                        Payment = Payment.lower()  # 將付款方式轉換為小寫
+
+                        if Payment == 'fps':
                             print('請掃描QR-Code')
-                        elif Payment == 'Google Pay':
+                        elif Payment == 'google pay':
                             print('請輸入Google帳號')
-                        elif Payment == 'JCB' or Payment == 'MasterCard' or Payment == 'Visa':
+                        elif Payment in ['jcb', 'mastercard', 'visa']:  # 使用列表進行比較
                             visa_master_jcb_pay()
-                        elif Payment == 'UnionPay':
+                        elif Payment == 'unionpay':
                             unionpay()
-                        elif Payment == 'PPS':
+                        elif Payment == 'pps':
                             pps_pay()
                         else:
                             print('預定失敗：此付款方式尚未建立')
-                            break                    
+                    
                         
                         print(f'成功預定【{Venue}】的【{Venue_Type}】！')
                 else:
