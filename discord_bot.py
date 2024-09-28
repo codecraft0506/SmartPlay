@@ -4,6 +4,11 @@
 import json
 import discord
 import asyncio
+with open('config.json', 'r', encoding='utf-8') as config_file:
+    config = json.load(config_file)
+
+token = config["discord"][0]["token"]
+channel_id = config["discord"][0]["id"]
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -25,7 +30,8 @@ async def run(token):
 @client.event
 async def on_ready():
     print(f"目前登入身份 --> {client.user}")
-
+    channel = client.get_channel(channel_id) #  Gets channel from internal cache
+    await channel.send("請輸入驗證碼！") #  Sends message to channel    
 
 @client.event
 async def on_message(message):
@@ -40,14 +46,8 @@ async def on_message(message):
 
 
 def start_bot():
-    with open('config.json', 'r', encoding='utf-8') as config_file:
-        config = json.load(config_file)
-    
-    token = config["discord"][0]["token"]
-    
     # Start the Discord client asynchronously
     asyncio.run(run(token))
     
     # After the client is closed, return the authcode
-    return authcode
-
+    return authcode    

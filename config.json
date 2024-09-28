@@ -17,9 +17,10 @@
             "安全碼": "907"
         }
     ],
-    "discord":[
-    {
-            "token":"MTI4OTQ0MjkyNTkwOTkwMTM0NA.GWCzIS.m24xornJy5M_aA0PdVxvHHhUktAUPdnkcF9mfw"
-    }
+    "discord": [
+        {
+            "token": "MTI4OTQ0MjkyNTkwOTkwMTM0NA.GWCzIS.m24xornJy5M_aA0PdVxvHHhUktAUPdnkcF9mfw",
+            "id": 1289443836451360852
+        }
     ]
 }
