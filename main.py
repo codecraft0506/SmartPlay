@@ -60,7 +60,7 @@ def book_facility(booking):
 
     driver = webdriver.Firefox(options=options)
     driver.get('https://www.smartplay.lcsd.gov.hk/home?lang=tc')
-    wait = WebDriverWait(driver, 10)
+    wait = WebDriverWait(driver, 120)
 
     def Login():
         account_element = wait.until(EC.visibility_of_element_located((By.XPATH, '(//input[@class="el-input__inner"])[1]')))
@@ -147,14 +147,23 @@ def book_facility(booking):
         securityCode_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="securityCode"]')))
         securityCode_element.send_keys(securityCode)
         driver.switch_to.default_content()
-
         wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="pay-button"]'))).click()
 
         OTP_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="challengeFrame"]')))
         driver.switch_to.frame(OTP_iframe_element)
-        wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnSubmitForm"]'))).click()
+        buttons_1 = driver.find_elements(By.XPATH, '//*[@id="btnSubmitForm"]')
+        buttons_2 = driver.find_elements(By.XPATH, '//button[@type="submit" and contains(@class, "btn-primary")]')
+
+        if buttons_1:  # 如果找到按鈕，則點擊它
+            wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnSubmitForm"]'))).click()
+        elif buttons_2:
+            wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@type="submit" and contains(@class, "btn-primary")]'))).click()
+        else:
+            wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnVerifySubmit"]'))).click()
+        
         driver.switch_to.default_content()
 
+        
 
     def unionpay():
         wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="pay-button"]'))).click()
@@ -297,11 +306,25 @@ def book_facility(booking):
                         print(f"Received authcode: {authcode}")
                         OTP_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="challengeFrame"]')))
                         driver.switch_to.frame(OTP_iframe_element)
-                        OTP_Password_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="code"]')))
-                        OTP_Password_element.send_keys(authcode)
-                        wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@type="submit" and contains(@class, "btn-primary")]'))).click()
-                        driver.switch_to.default_content()
+                        OTP_Password_element = driver.find_elements(By.XPATH, '//*[@id="code"]')
+                        OTP_Password_element_1 = driver.find_element(By.XPATH, '//*[@id="challengeValue"]')
+                        if OTP_Password_element:
+                            OTP_Password_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="code"]')))
+                            OTP_Password_element.send_keys(authcode)
+                            wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@type="submit" and contains(@class, "btn-primary")]'))).click()
+                            
 
+                        elif OTP_Password_element_1:
+                            OTP_Password_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="challengeValue"]')))
+                            OTP_Password_element.send_keys(authcode)
+                            wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnVerifySubmit"]'))).click()
+                            
+
+                        else:
+                            print("尚未完成此張付款方式")
+                            break
+
+                        driver.switch_to.default_content()
                         print(f'成功預定【{Venue}】的【{Venue_Type}】！')
                 else:
                     continue
