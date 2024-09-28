@@ -304,6 +304,8 @@ def book_facility(booking):
                         # 信用卡驗證碼
                         authcode = discord_bot.start_bot()
                         print(f"Received authcode: {authcode}")
+
+                        # OTP認證
                         OTP_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="challengeFrame"]')))
                         driver.switch_to.frame(OTP_iframe_element)
                         OTP_Password_element = driver.find_elements(By.XPATH, '//*[@id="code"]')
@@ -313,7 +315,6 @@ def book_facility(booking):
                             OTP_Password_element.send_keys(authcode)
                             wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@type="submit" and contains(@class, "btn-primary")]'))).click()
                             
-
                         elif OTP_Password_element_1:
                             OTP_Password_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="challengeValue"]')))
                             OTP_Password_element.send_keys(authcode)
@@ -321,7 +322,7 @@ def book_facility(booking):
                             
 
                         else:
-                            print("尚未完成此張付款方式")
+                            print("預定失敗：尚未完成此張付款方式")
                             break
 
                         driver.switch_to.default_content()
