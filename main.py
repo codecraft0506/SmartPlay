@@ -104,14 +104,14 @@ def book_facility(booking):
             print('Error Time Set')
     
     def select_Payment(Payment):
-        
+        Payment = Payment.lower()
         payment_methods_element = driver.find_element(By.XPATH, '/html/body/div/div[2]/div[1]/div/div/div/div[2]')
         payment_methods = payment_methods_element.find_elements(By.XPATH, ".//div[@class='payment-method-box']")
         
         for method in payment_methods:
             span_elements = method.find_elements(By.XPATH, './/span')
             for span in span_elements:
-                if span.text == Payment:
+                if span.text.lower() == Payment:
                     method.find_element(By.XPATH, ".//img[@class='mr10 pointer' and @alt='smartplay']").click()
     
     def google_pay():
@@ -147,7 +147,11 @@ def book_facility(booking):
         securityCode_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="securityCode"]')))
         securityCode_element.send_keys(securityCode)
         driver.switch_to.default_content()
-                
+
+        wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="pay-button"]'))).click()
+        wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnSubmitForm"]'))).click()
+
+
     def unionpay():
         wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="pay-button"]'))).click()
         number_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="cardNumber"]')))
