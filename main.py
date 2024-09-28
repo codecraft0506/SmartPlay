@@ -149,7 +149,11 @@ def book_facility(booking):
         driver.switch_to.default_content()
 
         wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="pay-button"]'))).click()
+
+        OTP_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="challengeFrame"]')))
+        driver.switch_to.frame(OTP_iframe_element)
         wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnSubmitForm"]'))).click()
+        driver.switch_to.default_content()
 
 
     def unionpay():
@@ -260,6 +264,7 @@ def book_facility(booking):
                             print(f'成功預定【{Venue}】的【{Venue_Type}】！')
                             break
                         else:
+                            wait.until(EC.invisibility_of_element_located((By.CLASS_NAME, "el-loading-mask")))
                             wait.until(EC.element_to_be_clickable((By.XPATH, "//div[contains(text(), '確認付款')]"))).click()
                         
                         #選擇付款方式
@@ -290,7 +295,13 @@ def book_facility(booking):
                         # 信用卡驗證碼
                         authcode = discord_bot.start_bot()
                         print(f"Received authcode: {authcode}")
-                        
+                        OTP_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="challengeFrame"]')))
+                        driver.switch_to.frame(OTP_iframe_element)
+                        OTP_Password_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="code"]')))
+                        OTP_Password_element.send_keys(authcode)
+                        wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@type="submit" and contains(@class, "btn-primary")]'))).click()
+                        driver.switch_to.default_content()
+
                         print(f'成功預定【{Venue}】的【{Venue_Type}】！')
                 else:
                     continue
