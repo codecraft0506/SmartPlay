@@ -1,15 +1,17 @@
 import time
 import json
+import discord
 import threading
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import discord_bot
 
 # 讀取 JSON 配置文件
 with open('config.json', 'r', encoding='utf-8') as config_file:
     config = json.load(config_file)
-
+    
 def format_time(time_str):
     # 取得小時數和分鐘數
     hour = int(time_str[:2])  # 提取前兩位作為小時
@@ -27,7 +29,6 @@ def format_time(time_str):
         formatted_time = f'下午{formatted_hour}時{minute_str}'
 
     return formatted_time
-
 
 def book_facility(booking):
     for booking in config['預訂'][1:]:
@@ -146,7 +147,7 @@ def book_facility(booking):
         securityCode_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="securityCode"]')))
         securityCode_element.send_keys(securityCode)
         driver.switch_to.default_content()
-
+                
     def unionpay():
         wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="pay-button"]'))).click()
         number_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="cardNumber"]')))
@@ -158,6 +159,7 @@ def book_facility(booking):
         securityCode_element = wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@name='PIN']")))
         securityCode_element.send_keys(securityCode)
         wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@name='TNC']"))).click()
+        
 
     Login()
     Search_Facility()
@@ -281,6 +283,9 @@ def book_facility(booking):
                         else:
                             print('預定失敗：此付款方式尚未建立')
                     
+                        # 信用卡驗證碼
+                        authcode = discord_bot.start_bot()
+                        print(f"Received authcode: {authcode}")
                         
                         print(f'成功預定【{Venue}】的【{Venue_Type}】！')
                 else:
