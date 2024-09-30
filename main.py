@@ -1,6 +1,5 @@
 import time
 import json
-import discord
 import threading
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -61,7 +60,12 @@ def book_facility(booking):
     driver = webdriver.Firefox(options=options)
     driver.get('https://www.smartplay.lcsd.gov.hk/home?lang=tc')
     wait = WebDriverWait(driver, 120)
-
+    
+    # Create a single instance of the bot (shared by all threads)
+    token = config["discord"][0]["token"]
+    channel_id = config["discord"][0]["id"]
+    bot_instance = discord_bot.UserAccountBot(token, channel_id)  # Use the bot class
+    
     def Login():
         account_element = wait.until(EC.visibility_of_element_located((By.XPATH, '(//input[@class="el-input__inner"])[1]')))
         account_element.send_keys(Account)
@@ -176,8 +180,21 @@ def book_facility(booking):
         securityCode_element = wait.until(EC.visibility_of_element_located((By.XPATH, "//input[@name='PIN']")))
         securityCode_element.send_keys(securityCode)
         wait.until(EC.element_to_be_clickable((By.XPATH, "//input[@name='TNC']"))).click()
-        
 
+    def call_bot():
+        # Add the account to the bot's pending list
+        bot_instance.add_account(Account)
+        
+        # Start the bot if not already running
+        if not hasattr(bot_instance, 'started') or not bot_instance.started:
+            bot_instance.started = True
+            bot_instance.start()  # Start the bot asynchronously in the background
+        
+        # Wait for and retrieve the otp_code for this account
+        otp_code = bot_instance.get_authcode(Account)
+        if otp_code:
+            return otp_code
+    
     Login()
     Search_Facility()
     select_time()
@@ -302,9 +319,8 @@ def book_facility(booking):
                             print('預定失敗：此付款方式尚未建立')
                     
                         # 信用卡驗證碼
-                        authcode = discord_bot.start_bot()
-                        print(f"Received authcode: {authcode}")
-
+                        otp_code = call_bot()
+                        
                         # OTP認證
                         OTP_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="challengeFrame"]')))
                         driver.switch_to.frame(OTP_iframe_element)
@@ -312,12 +328,12 @@ def book_facility(booking):
                         OTP_Password_element_1 = driver.find_element(By.XPATH, '//*[@id="challengeValue"]')
                         if OTP_Password_element:
                             OTP_Password_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="code"]')))
-                            OTP_Password_element.send_keys(authcode)
+                            OTP_Password_element.send_keys(otp_code)
                             wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@type="submit" and contains(@class, "btn-primary")]'))).click()
                             
                         elif OTP_Password_element_1:
                             OTP_Password_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="challengeValue"]')))
-                            OTP_Password_element.send_keys(authcode)
+                            OTP_Password_element.send_keys(otp_code)
                             wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnVerifySubmit"]'))).click()
                             
 

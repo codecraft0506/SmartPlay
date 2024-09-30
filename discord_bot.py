@@ -1,53 +1,68 @@
 #!/user/bin/env python
 # -*- coding: utf-8 -*-
-
-import json
 import discord
 import asyncio
-with open('config.json', 'r', encoding='utf-8') as config_file:
-    config = json.load(config_file)
+import time
 
-token = config["discord"][0]["token"]
-channel_id = config["discord"][0]["id"]
+class UserAccountBot:
+    def __init__(self, token, channel_id):
+        self.token = token
+        self.channel_id = channel_id
+        self.OTPresults = {}  # Store OTPs for multiple user accounts
+        self.pending_accounts = {}  # Keep track of accounts waiting for OTPs
 
-intents = discord.Intents.default()
-intents.message_content = True
-client = discord.Client(intents=intents)
+        intents = discord.Intents.default()
+        intents.message_content = True
+        self.client = discord.Client(intents=intents)
 
-authcode = None  # Store authcode globally for use outside of the event
+        # Register event handlers
+        self.client.event(self.on_ready)
+        self.client.event(self.on_message)
 
+    async def run(self):
+        try:
+            await self.client.start(self.token)  # Start the bot
+        except Exception as e:
+            print(f"Error: {e}")
+        finally:
+            await self.client.close()
 
-async def run(token):
-    try:
-        await client.start(token)  # Start the bot
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        # Ensure we close the aiohttp session properly after stopping the client
-        await client.close()  # Clean up the client session
+    def start(self):
+        # Use asyncio to run the bot
+        asyncio.run(self.run())
 
+    async def on_ready(self):
+        print(f"Bot logged in as {self.client.user}")
+        for account in self.pending_accounts:
+            await self.send_welcome_message(account)
 
-@client.event
-async def on_ready():
-    print(f"目前登入身份 --> {client.user}")
-    channel = client.get_channel(channel_id) #  Gets channel from internal cache
-    await channel.send("請輸入驗證碼！") #  Sends message to channel    
+    async def send_welcome_message(self, account):
+        # Send a welcome message to the Discord channel for the account
+        await self.client.get_channel(self.channel_id).send(f"{account} 訂票成功，請輸入驗證碼")
 
-@client.event
-async def on_message(message):
-    global authcode  # Modify global variable
-    # 排除機器人本身的訊息，避免無限循環
-    if message.author == client.user:
-        return
-    if client.user.mentioned_in(message):
-        authcode = message.content.replace(f"<@{client.user.id}> ", "").strip()
-        await message.reply("收到，驗證中!")
-        await client.close()  # Close the connection after getting the authcode
+    async def on_message(self, message):
+        if message.author == self.client.user:
+            return  # Ignore messages from the bot itself
 
+        for account in self.pending_accounts:
+            if self.client.user.mentioned_in(message):
+                # Extract and store the authcode for the specific account
+                authcode = message.content.replace(f"<@{self.client.user.id}> ", "").strip()
+                self.OTPresults[account] = authcode
+                await message.reply(f"{account} 收到，驗證中!")
+                self.pending_accounts.pop(account)  # Remove the account from pending after receiving OTP
+                if not self.pending_accounts:  # Close the bot if no more accounts pending
+                    await self.client.close()
+                break
 
-def start_bot():
-    # Start the Discord client asynchronously
-    asyncio.run(run(token))
+    def add_account(self, account):
+        """Adds a user account to pending accounts."""
+        self.pending_accounts[account] = True
+
+    def get_authcode(self, account):
+        """Waits for OTP and returns authcode for the account."""
+        while account not in self.OTPresults:
+            time.sleep(1)  # Wait until OTP is received
+        return self.OTPresults[account]
+
     
-    # After the client is closed, return the authcode
-    return authcode    
