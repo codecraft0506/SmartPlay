@@ -110,8 +110,13 @@ def book_facility(booking):
         input_element.send_keys(Venue)
 
         time.sleep(2)
-        wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div/div[2]/div[2]/div[2]/div/div/div/div/div/div[3]/div[1]/div[2]/div[2]/div/div/div[3]/div/div'))).click()
-        wait.until(EC.visibility_of_element_located((By.XPATH, '/html/body/div/div[2]/div[2]/div[2]/div/div/div/div/div/div[3]/div[3]/div'))).click()
+        wait.until(EC.invisibility_of_element_located((By.CLASS_NAME, "el-loading-mask")))
+        Venue_elem =wait.until(EC.element_to_be_clickable((By.XPATH, f"//p[contains(text(), '{Venue}')]/parent::div")))
+        
+        driver.execute_script("arguments[0].click();", Venue_elem)
+        Search_Button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[contains(text(), '搜尋')]")))
+        
+        driver.execute_script("arguments[0].click();", Search_Button)
 
     def select_time():
         morning = ['0700','0730','0800','0830','0900','0930','1000','1030','1100','1130']
