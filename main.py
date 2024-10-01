@@ -102,7 +102,7 @@ def book_facility(booking):
     def Search_Facility():
         Venue_elem = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[contains(text(), '設施')]")))
         driver.execute_script("arguments[0].click();", Venue_elem)
-        time.sleep(2)
+        time.sleep(3)
         Venue_elem = wait.until(EC.visibility_of_element_located((By.XPATH, "(//div[@class='text'])")))
         driver.execute_script("arguments[0].click();", Venue_elem)
 
