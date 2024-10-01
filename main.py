@@ -2,10 +2,21 @@ import time
 import json
 import threading
 from selenium import webdriver
+from seleniumwire import webdriver  # 使用 selenium-wire 的 webdriver
+from selenium.webdriver.firefox.options import Options  # 正確使用瀏覽器選項
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import discord_bot
+
+# 自定義標頭
+custom_headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Upgrade-Insecure-Requests': '1',
+    'Connection': 'keep-alive',
+}
 
 # 讀取 JSON 配置文件
 with open('config.json', 'r', encoding='utf-8') as config_file:
@@ -30,35 +41,48 @@ def format_time(time_str):
     return formatted_time
 
 def book_facility(booking):
-    for booking in config['預訂'][1:]:
-        if "付款方式" in booking and booking["付款方式"] == "PPS":
-            Time = booking['選取時段']
-            Account = booking['帳號']
-            Password = booking['密碼']
-            Venue = booking['體育館']
-            Venue_Type = booking['設施']
-            Payment = booking['付款方式']
-            number = booking['卡號']
-            securityCode = booking['安全碼']
-        else:
-            Time = booking['選取時段']
-            Account = booking['帳號']
-            Password = booking['密碼']
-            Venue = booking['體育館']
-            Venue_Type = booking['設施']
-            Payment = booking['付款方式']
-            nameOnCard = booking['持卡人姓名']
-            number = booking['卡號']
-            expiryMonth = booking['到期月']
-            expiryYear = booking['到期年']
-            securityCode = booking['安全碼']
+    # 直接使用傳入的 'booking' 參數
+    if "付款方式" in booking and booking["付款方式"] == "PPS":
+        Time = booking['選取時段']
+        Account = booking['帳號']
+        Password = booking['密碼']
+        Venue = booking['體育館']
+        Venue_Type = booking['設施']
+        Payment = booking['付款方式']
+        number = booking['卡號']
+        securityCode = booking['安全碼']
+    else:
+        Time = booking['選取時段']
+        Account = booking['帳號']
+        Password = booking['密碼']
+        Venue = booking['體育館']
+        Venue_Type = booking['設施']
+        Payment = booking['付款方式']
+        nameOnCard = booking['持卡人姓名']
+        number = booking['卡號']
+        expiryMonth = booking['到期月']
+        expiryYear = booking['到期年']
+        securityCode = booking['安全碼']
 
-    # 為每個 WebDriver 創建一個新的用戶配置
-    options = webdriver.FirefoxOptions()
+    # 配置瀏覽器選項
+    options = Options()
     options.add_argument(f"--user-data-dir={Account}")  # 使用帳號作為資料夾名稱
 
-    driver = webdriver.Firefox(options=options)
+    # 設置 Selenium Wire 選項
+    seleniumwire_options = {
+        'addr': '127.0.0.1',  # 默認地址
+        'port': 0,            # 動態分配可用的端口
+        'proxy': {            # 如果需要使用代理
+            'no_proxy': 'localhost,127.0.0.1'  # 無需代理的本地地址
+        }
+    }
+
+    # 使用 selenium-wire 創建 WebDriver
+    driver = webdriver.Firefox(seleniumwire_options=seleniumwire_options, options=options)
+
     driver.get('https://www.smartplay.lcsd.gov.hk/home?lang=tc')
+    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
     wait = WebDriverWait(driver, 120)
     
     # Create a single instance of the bot (shared by all threads)
@@ -78,7 +102,7 @@ def book_facility(booking):
     def Search_Facility():
         Venue_elem = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[contains(text(), '設施')]")))
         driver.execute_script("arguments[0].click();", Venue_elem)
-        time.sleep(1.2)
+        time.sleep(2)
         Venue_elem = wait.until(EC.visibility_of_element_located((By.XPATH, "(//div[@class='text'])")))
         driver.execute_script("arguments[0].click();", Venue_elem)
 
