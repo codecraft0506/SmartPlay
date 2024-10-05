@@ -2,21 +2,11 @@ import time
 import json
 import threading
 from selenium import webdriver
-from seleniumwire import webdriver  # 使用 selenium-wire 的 webdriver
 from selenium.webdriver.firefox.options import Options  # 正確使用瀏覽器選項
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import discord_bot
-
-# 自定義標頭
-custom_headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Upgrade-Insecure-Requests': '1',
-    'Connection': 'keep-alive',
-}
 
 # 讀取 JSON 配置文件
 with open('config.json', 'r', encoding='utf-8') as config_file:
@@ -68,17 +58,7 @@ def book_facility(booking):
     options = Options()
     options.add_argument(f"--user-data-dir={Account}")  # 使用帳號作為資料夾名稱
 
-    # 設置 Selenium Wire 選項
-    seleniumwire_options = {
-        'addr': '127.0.0.1',  # 默認地址
-        'port': 0,            # 動態分配可用的端口
-        'proxy': {            # 如果需要使用代理
-            'no_proxy': 'localhost,127.0.0.1'  # 無需代理的本地地址
-        }
-    }
-
-    # 使用 selenium-wire 創建 WebDriver
-    driver = webdriver.Firefox(seleniumwire_options=seleniumwire_options, options=options)
+    driver = webdriver.Firefox(options=options)  # 不使用 seleniumwire_options
 
     driver.get('https://www.smartplay.lcsd.gov.hk/home?lang=tc')
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
@@ -181,16 +161,25 @@ def book_facility(booking):
         securityCode_element.send_keys(securityCode)
         driver.switch_to.default_content()
         wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="pay-button"]'))).click()
-
+        
         OTP_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="challengeFrame"]')))
         driver.switch_to.frame(OTP_iframe_element)
+        time.sleep(10)
         buttons_1 = driver.find_elements(By.XPATH, '//*[@id="btnSubmitForm"]')
         buttons_2 = driver.find_elements(By.XPATH, '//button[@type="submit" and contains(@class, "btn-primary")]')
+        buttons_3 = driver.find_elements(By.XPATH, '//label[@for="CredentialId-1a"]')
 
         if buttons_1:  # 如果找到按鈕，則點擊它
             wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnSubmitForm"]'))).click()
         elif buttons_2:
-            wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@type="submit" and contains(@class, "btn-primary")]'))).click()
+            if buttons_3:
+                sms_option = wait.until(EC.element_to_be_clickable((By.XPATH, '//label[@for="CredentialId-1a"]')))
+                sms_option.click()
+                # 點擊 LET'S START 按鈕
+                lets_start_button = wait.until(EC.element_to_be_clickable((By.ID, 'ContinueButton')))
+                lets_start_button.click()
+            else:
+                wait.until(EC.element_to_be_clickable((By.XPATH, '//button[@type="submit" and contains(@class, "btn-primary")]'))).click()       
         else:
             wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnVerifySubmit"]'))).click()
         
@@ -254,10 +243,11 @@ def book_facility(booking):
                 time_data = [line for line in time_element.text.split('\n') if line.strip()]
 
                 for i in range(0, len(time_data), 2):
-                    new_entry = [time_data[i], f"{time_data[i + 1]}張"]
-                    if new_entry not in available_times:
-                        available_times.append(new_entry)
-            
+                    if i + 1 < len(time_data):  # 確保不會超出範圍
+                        new_entry = [time_data[i], f"{time_data[i + 1]}張"]
+                    else:
+                        new_entry = [time_data[i], "無可用票"]
+
             for sub_index, (time_str, count) in enumerate(available_times):
                 if time_str == format_time(Time):
                     if count == '0張':
@@ -354,7 +344,9 @@ def book_facility(booking):
                         OTP_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="challengeFrame"]')))
                         driver.switch_to.frame(OTP_iframe_element)
                         OTP_Password_element = driver.find_elements(By.XPATH, '//*[@id="code"]')
-                        OTP_Password_element_1 = driver.find_element(By.XPATH, '//*[@id="challengeValue"]')
+                        OTP_Password_element_1 = driver.find_elements(By.XPATH, '//*[@id="challengeValue"]')
+                        OTP_Password_element_2 = driver.find_elements(By.XPATH, '//*[@id="CredentialValidateInput"]')
+
                         if OTP_Password_element:
                             OTP_Password_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="code"]')))
                             OTP_Password_element.send_keys(otp_code)
@@ -364,8 +356,11 @@ def book_facility(booking):
                             OTP_Password_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="challengeValue"]')))
                             OTP_Password_element.send_keys(otp_code)
                             wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnVerifySubmit"]'))).click()
-                            
-
+                        
+                        elif OTP_Password_element_2:
+                            OTP_Password_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="CredentialValidateInput"]')))
+                            OTP_Password_element.send_keys(otp_code)
+                            wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ValidateButton"]'))).click()
                         else:
                             print("預定失敗：尚未完成此張付款方式")
                             break
