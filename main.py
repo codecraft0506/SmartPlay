@@ -83,6 +83,7 @@ def book_facility(booking):
         Venue_elem = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[contains(text(), '設施')]")))
         driver.execute_script("arguments[0].click();", Venue_elem)
         time.sleep(3)
+        wait.until(EC.invisibility_of_element_located((By.CLASS_NAME, "el-loading-mask")))
         Venue_elem = wait.until(EC.visibility_of_element_located((By.XPATH, "(//div[@class='text'])")))
         driver.execute_script("arguments[0].click();", Venue_elem)
 
@@ -118,7 +119,7 @@ def book_facility(booking):
     
     def select_Payment(Payment):
         Payment = Payment.lower()
-        payment_methods_element = driver.find_element(By.XPATH, '/html/body/div/div[2]/div[1]/div/div/div/div[2]')
+        payment_methods_element = driver.find_element(By.XPATH, '//div[@class="payment-method" and @data-v-09c33910 and @data-v-012d0593]')
         payment_methods = payment_methods_element.find_elements(By.XPATH, ".//div[@class='payment-method-box']")
         
         for method in payment_methods:
@@ -126,9 +127,6 @@ def book_facility(booking):
             for span in span_elements:
                 if span.text.lower() == Payment:
                     method.find_element(By.XPATH, ".//img[@class='mr10 pointer' and @alt='smartplay']").click()
-    
-    def google_pay():
-        pass
 
     def visa_master_jcb_pay():
         name_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="#name-on-card-exactly-shown-on-card"]')))
@@ -357,16 +355,22 @@ def book_facility(booking):
                             OTP_Password_element.send_keys(otp_code)
                             wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnVerifySubmit"]'))).click()
                         
+                        # Case 3: 處理第三種 OTP 欄位
                         elif OTP_Password_element_2:
                             OTP_Password_element = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="CredentialValidateInput"]')))
                             OTP_Password_element.send_keys(otp_code)
                             wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="ValidateButton"]'))).click()
-                        else:
-                            print("預定失敗：尚未完成此張付款方式")
-                            break
+                            time.sleep(3)
+                            # 檢查 border-color
+                            border_color = OTP_Password_element.value_of_css_property('border-color')
+                            if border_color == 'rgb(215, 0, 0)':
+                                print("The passcode is incorrect.")
+                                return  # 中斷預定流程
+                            else:
+                                print(f'成功預定【{Venue}】的【{Venue_Type}】！')
 
-                        driver.switch_to.default_content()
-                        print(f'成功預定【{Venue}】的【{Venue_Type}】！')
+                        else:
+                            print("預定失敗原因：The passcode is incorrect.")
                 else:
                     continue
             break
