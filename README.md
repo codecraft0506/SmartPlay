@@ -11,7 +11,7 @@
 
 1. 開一個伺服器
 2. 點選 [此處](https://discord.com/oauth2/authorize?client_id=1289442925909901344&permissions=8&integration_type=0&scope=bot) 並將機器人加入你的伺服器
-3. 在伺服器左欄的任一個文字頻道上點擊右鍵，點選最下方「複製頻道 ID」
+3. 在伺服器左欄的任一個文字頻道上點擊右鍵開啟選單，點選最下方「複製頻道 ID」
 4. 將 ID 貼入 config.json > discord > id 
 
 ## 注意事項
