@@ -119,14 +119,25 @@ def book_facility(booking):
     
     def select_Payment(Payment):
         Payment = Payment.lower()
+        
+        # 獲取支付方式父元素
         payment_methods_element = driver.find_element(By.XPATH, '//div[@class="payment-method" and @data-v-09c33910 and @data-v-012d0593]')
+        
+        # 找到所有支付方式元素
         payment_methods = payment_methods_element.find_elements(By.XPATH, ".//div[@class='payment-method-box']")
         
         for method in payment_methods:
+            # 獲取每個支付方式的 span 元素
             span_elements = method.find_elements(By.XPATH, './/span')
+            
             for span in span_elements:
                 if span.text.lower() == Payment:
-                    method.find_element(By.XPATH, ".//img[@class='mr10 pointer' and @alt='smartplay']").click()
+                    # 等待圖片元素出現並可點擊
+                    img_element = WebDriverWait(method, 10).until(
+                        EC.element_to_be_clickable((By.XPATH, ".//img[@class='mr10 pointer' and @alt='smartplay']"))
+                    )
+                    img_element.click()
+                    return
 
     def visa_master_jcb_pay():
         name_iframe_element = wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="#name-on-card-exactly-shown-on-card"]')))
