@@ -6,6 +6,7 @@ from selenium.webdriver.firefox.options import Options  # 正確使用瀏覽器�
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from datetime import datetime
 import discord_bot
 
 # 讀取 JSON 配置文件
