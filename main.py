@@ -6,11 +6,17 @@ from selenium.webdriver.firefox.options import Options  # 正確使用瀏覽器�
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from datetime import datetime
 import discord_bot
 
 # 讀取 JSON 配置文件
 with open('config.json', 'r', encoding='utf-8') as config_file:
     config = json.load(config_file)
+
+schedule = config.get('預訂')[0].get('是否排程')
+start_time = config.get('預訂')[0].get('運行時間')
+if schedule:
+    print(f'等待排程，{start_time}開始執行')
     
 def format_time(time_str):
     # 取得小時數和分鐘數
@@ -389,18 +395,19 @@ def book_facility(booking):
 # 創建線程以同時預定
 threads = []
 for booking in config['預訂'][1:]:
-#     # 獲取預訂的運行時間
-#     booking_run_time = config['預訂'][0]['運行時間']
-#     booking_run_time_dt = datetime.strptime(booking_run_time, "%H%M").time()
-    
-#     # 創建包含當前日期和運行時間的 datetime 對象
-#     now = datetime.now()
-#     booking_run_time_full = datetime.combine(now.date(), booking_run_time_dt)
+    if schedule:
+        # 獲取預訂的運行時間
+        booking_run_time = config['預訂'][0]['運行時間']
+        booking_run_time_dt = datetime.strptime(booking_run_time, "%H%M").time()
+        
+        # 創建包含當前日期和運行時間的 datetime 對象
+        now = datetime.now()
+        booking_run_time_full = datetime.combine(now.date(), booking_run_time_dt)
 
-#     # 計算延遲時間
-#     delay_seconds = (booking_run_time_full - now).total_seconds()
-#     if delay_seconds > 0:
-#         time.sleep(delay_seconds)
+        # 計算延遲時間
+        delay_seconds = (booking_run_time_full - now).total_seconds()
+        if delay_seconds > 0:
+            time.sleep(delay_seconds)
 
     thread = threading.Thread(target=book_facility, args=(booking,))
     threads.append(thread)
