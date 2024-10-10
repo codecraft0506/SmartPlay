@@ -1,23 +1,51 @@
 # SmartPlay
 
-## 環境設定
+## 環境設定指南
 
-### 套件安裝
+### 1. 套件安裝
 
-1. 下載 Firefox 瀏覽器
-2. 到主程式目錄開啟終端 pip install -r requirement.txt
+1. 下載並安裝 [Firefox 瀏覽器](https://www.mozilla.org/firefox/new/)。
+2. 在主程式目錄中打開終端，執行以下指令安裝依賴套件：
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-### 操作步驟
+### 2. 前置作業
 
-1. 開一個 DC 伺服器
-2. 點選 [此處](https://discord.com/oauth2/authorize?client_id=1289442925909901344&permissions=8&integration_type=0&scope=bot) 並將機器人加入你的伺服器
-3. 在伺服器左欄的任一個文字頻道上點擊右鍵開啟選單，點選最下方「複製頻道 ID」
-4. 將 ID 貼入 config.json > discord > id
-5. 執行前先在 config.json 中設定必要參數(如：場地、時段、信用卡等)
-6. 執行 main.py
+1. 建立一個 Discord 伺服器，或使用已存在的伺服器。
+2. 點擊 [此處](https://discord.com/oauth2/authorize?client_id=1289442925909901344&permissions=8&integration_type=0&scope=bot) 並將機器人加入你的伺服器。
+3. 在 Discord 伺服器的文字頻道上，右鍵點擊頻道名稱，然後選擇「複製頻道 ID」。
+4. 將複製的頻道 ID 貼入 `config.json` 檔案中的 `discord > id` 欄位。
+
+---
+
+## 使用說明
+
+### 1. 設定 config.json 檔案
+
+- 在 `config.json` 檔案中填寫必要的參數：
+  - 帳號、密碼
+  - 體育館
+  - 時段
+  - 設施
+  - 信用卡資訊
+- 如需多開場次，則添加多組參數。
+
+範例請參考目前 `config.json` 格式
+
+### 2. 執行程式
+
+1. 確認 `config.json` 設置正確。
+2. 在終端中執行以下指令啟動程式：
+   ```bash
+   python main.py
+   ```
+3. 當系統輸入卡號後，機器人會傳送訊息請求你輸入驗證碼。請在 Discord 頻道中 @smartplay 並輸入驗證碼以完成操作。
+---
 
 ## 注意事項
 
-1. 系統預設搶最新日期的場地，例: 10/10 執行會搶 10/15 的場地
-2. 目前是手動開啟即開始搶票，若要排程定時請把下面主執行函式被註解掉的程式碼取消就好
-3. 系統輸入卡號後，bot會傳送訊息要求你輸入驗證碼，請 @smartplay 並輸入驗證碼
+1. **預設場地日期**：系統預設會搶最新日期的場地。例如：在 10/10 執行時，會自動搶 10/15 的場地。
+2. **手動與排程搶票**：系統啟動後即開始搶票。若需要排程執行，請取消主程式中被註解掉的排程程式碼。
+3. **多開驗證碼順序**：多開時搶票一定會有先後順序，Discord會依序通知，驗證碼也會依序收到，請按照此順序 @smartplay 並輸入驗證碼即可對應到正確的驗證碼。
+
