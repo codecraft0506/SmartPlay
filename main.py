@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
+from datetime import datetime, timedelta
 import discord_bot
 
 # 讀取 JSON 配置文件
@@ -399,10 +400,14 @@ for booking in config['預訂'][1:]:
         # 獲取預訂的運行時間
         booking_run_time = config['預訂'][0]['運行時間']
         booking_run_time_dt = datetime.strptime(booking_run_time, "%H%M").time()
-        
+
         # 創建包含當前日期和運行時間的 datetime 對象
         now = datetime.now()
         booking_run_time_full = datetime.combine(now.date(), booking_run_time_dt)
+
+        # 如果運行時間早於現在，將日期調整到明天
+        if booking_run_time_full < now:
+            booking_run_time_full += timedelta(days=1)
 
         # 計算延遲時間
         delay_seconds = (booking_run_time_full - now).total_seconds()
